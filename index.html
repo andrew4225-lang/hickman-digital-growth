@@ -66,12 +66,18 @@ leadForm.addEventListener('submit', async function(e) {
         { publicKey: 'wSpKzige2QXEAfTCw' }
       );
     } catch (emailError) {
-      // The lead remains safely stored even if email delivery is temporarily unavailable.
+      // The lead is already saved in Supabase. Show the actual notification error for diagnosis.
       console.error('Lead saved, but notification email failed:', emailError);
+      leadForm.reset();
+      const detail = emailError && (emailError.text || emailError.message)
+        ? String(emailError.text || emailError.message)
+        : 'Please check EmailJS Email History.';
+      note.textContent = 'Your inquiry was saved, but the email notification failed: ' + detail;
+      return;
     }
 
     leadForm.reset();
-    note.textContent = 'Thank you! Your inquiry has been received. We will follow up by email.';
+    note.textContent = 'Thank you! Your inquiry has been received and the notification email was accepted by EmailJS.';
   } catch (error) {
     console.error('Lead submission failed:', error);
     note.textContent = 'We could not submit your inquiry right now. Please email hickmandigitalgroup@gmail.com directly.';

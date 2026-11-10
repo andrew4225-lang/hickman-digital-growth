@@ -21,9 +21,42 @@
 <section class="cta"><div class="wrap"><div class="eyebrow">Ready to Get Started?</div><h2>Your next customer could be one great first impression away.</h2><p>Tell us what you do and what you need. We'll respond with a clear next step and straightforward quote.</p><a class="btn" href="#contact">Request a Free Quote</a></div></section>
 <section id="contact"><div class="wrap contact"><div><div class="eyebrow">Let's Talk</div><h2>Tell us about your business.</h2><p>Send an inquiry and we'll follow up with the next steps.</p><p><strong>Hickman Digital Growth</strong><br>Central Florida<br><a href="mailto:hickmandigitalgroup@gmail.com">hickmandigitalgroup@gmail.com</a></p></div><form id="leadForm"><div><label for="name">Your name</label><input id="name" name="Name" required placeholder="Full name"></div><div><label for="business">Business name</label><input id="business" name="Business" placeholder="Your business"></div><div><label for="email">Email address</label><input id="email" name="Email" type="email" required placeholder="you@example.com"></div><div><label for="service">What do you need?</label><select id="service" name="Service"><option>I'm not sure yet</option><option>Promo Flyer — $35</option><option>Social Starter — $75</option><option>Website Starter — $199</option><option>Custom monthly package</option></select></div><div><label for="message">Tell us a little more</label><textarea id="message" name="Message" placeholder="What does your business do?"></textarea></div><button class="btn" type="submit">Send Inquiry</button><small id="note" class="muted">Your email app will open with your inquiry ready to send.</small></form></div></section>
 </main><footer><div class="wrap">© <span id="year"></span> Hickman Digital Growth. All rights reserved.</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 document.getElementById('year').textContent=new Date().getFullYear();
 function choose(v){document.getElementById('service').value=v}
-document.getElementById('leadForm').addEventListener('submit',function(e){e.preventDefault();const d=new FormData(e.currentTarget);const subject=encodeURIComponent('Website inquiry — '+(d.get('Business')||d.get('Name')));const body=encodeURIComponent([...d.entries()].map(([k,v])=>k+': '+v).join('\n'));document.getElementById('note').textContent='Opening your email app. Please press Send to deliver your inquiry.';location.href='mailto:hickmandigitalgroup@gmail.com?subject='+subject+'&body='+body});
+const supabaseClient = window.supabase.createClient(
+  'https://rpzmjiiomgjttjjrkkqf.supabase.co',
+  'sb_publishable_Lwcv2EAfLV4gAn51_JtlVA_iEEimZIi'
+);
+const leadForm = document.getElementById('leadForm');
+leadForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const button = leadForm.querySelector('button[type="submit"]');
+  const note = document.getElementById('note');
+  const data = new FormData(leadForm);
+  const lead = {
+    name: String(data.get('Name') || '').trim(),
+    business_name: String(data.get('Business') || '').trim(),
+    email: String(data.get('Email') || '').trim(),
+    service: String(data.get('Service') || 'Not sure yet'),
+    message: String(data.get('Message') || '').trim()
+  };
+  button.disabled = true;
+  button.textContent = 'Sending...';
+  note.textContent = 'Sending your inquiry securely...';
+  try {
+    const { error } = await supabaseClient.from('hickman_digital_leads').insert([lead]);
+    if (error) throw error;
+    leadForm.reset();
+    note.textContent = 'Thank you! Your inquiry has been received. We will follow up by email.';
+  } catch (error) {
+    console.error('Lead submission failed:', error);
+    note.textContent = 'We could not submit your inquiry right now. Please email hickmandigitalgroup@gmail.com directly.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Send Inquiry';
+  }
+});
 </script>
 </body></html>
